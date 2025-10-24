@@ -1,0 +1,456 @@
+<?php
+$servidor = "localhost";
+$usuario = "root";
+$clave = "";
+$basedeatos = "pagina-web";
+
+$enlace = mysqli_connect($servidor, $usuario, $clave, $basedeatos);
+?>
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <title>Las Nebulosas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Orbitron', Arial, sans-serif;
+            color: #fff;
+            line-height: 1.6;
+            background: #02020a; /* Fondo más oscuro para tema espacial */
+            position: relative;
+            overflow-x: hidden;
+        }
+        /* Overlay para legibilidad */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4));
+            z-index: -1;
+        }
+        canvas#stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        /* Navegación */
+        .navbar {
+            background: linear-gradient(to right, #1e3a8a, #3b0764);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.5);
+        }
+        .navbar ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+        }
+        .navbar a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.2em;
+            text-shadow: 0 0 10px rgba(0, 183, 235, 0.8);
+            transition: color 0.3s, text-shadow 0.3s;
+        }
+        .navbar a:hover {
+            color: #00d4ff;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 1);
+        }
+        /* Encabezado con animación de estrellas */
+        .header {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(to bottom, #00b7eb, #6b21a8);
+            color: white;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 183, 235, 0.7);
+        }
+        .header h1 {
+            font-size: 3.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+        }
+        canvas#header-stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        /* Subencabezado */
+        .subheader {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .subheader h2 {
+            font-size: 2.2em;
+            color: #fff;
+            font-weight: 700;
+            text-shadow: 0 0 15px rgba(0, 212, 255, 0.8);
+        }
+        /* Contenido principal */
+        .content {
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(240, 240, 255, 0.9));
+            border: 3px solid #00b7eb;
+            border-radius: 12px;
+            padding: 40px;
+            margin: 30px 0;
+            box-shadow: 0 0 25px rgba(0, 183, 235, 0.5);
+            animation: fadeIn 1.2s ease-in;
+            color: #1e1e2e;
+        }
+        .content section {
+            margin-bottom: 50px;
+        }
+        .content h3 {
+            color: #1e3a8a;
+            font-size: 2em;
+            margin-bottom: 15px;
+            border-bottom: 3px solid #00b7eb;
+            padding-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 183, 235, 0.3);
+        }
+        .content h4 {
+            color: #3b0764;
+            font-size: 1.6em;
+            margin: 25px 0 15px;
+        }
+        .content p {
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+        .content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 25px 0;
+            box-shadow: 0 0 20px rgba(0, 183, 235, 0.4);
+            transition: transform 0.3s;
+        }
+        .content img:hover {
+            transform: scale(1.03);
+        }
+        .content a {
+            color: #00b7eb;
+            text-decoration: none;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 183, 235, 0.5);
+        }
+        .content a:hover {
+            color: #00d4ff;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 1);
+        }
+        /* Galería */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        .gallery img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 183, 235, 0.4);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .gallery img:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 25px rgba(0, 212, 255, 0.8);
+        }
+        /* Formulario */
+        .contact-form {
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(240, 240, 255, 0.9));
+            border: 3px solid #00b7eb;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 0 25px rgba(0, 183, 235, 0.5);
+        }
+        .contact-form h3 {
+            margin-bottom: 20px;
+            color: #1e3a8a;
+            text-shadow: 0 0 10px rgba(0, 183, 235, 0.3);
+        }
+        .contact-form input,
+        .contact-form textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #00b7eb;
+            border-radius: 8px;
+            font-size: 1.1em;
+            background: rgba(255, 255, 255, 0.8);
+            transition: border-color 0.3s;
+        }
+        .contact-form input:focus,
+        .contact-form textarea:focus {
+            border-color: #00d4ff;
+            outline: none;
+        }
+        .contact-form button {
+            background: linear-gradient(to right, #00b7eb, #1e90ff);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+        .contact-form button:hover {
+            background: linear-gradient(to right, #00d4ff, #3b82f6);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.8);
+        }
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 30px;
+            border: 3px solid #00b7eb;
+            border-radius: 12px;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(240, 240, 255, 0.9));
+            color: #1e1e2e;
+            box-shadow: 0 0 25px rgba(0, 183, 235, 0.5);
+        }
+        .footer a {
+            color: #00b7eb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .footer a:hover {
+            color: #00d4ff;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 1);
+        }
+        /* Animaciones */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Responsividad */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2.2em; }
+            .subheader h2 { font-size: 1.6em; }
+            .navbar ul { flex-direction: column; text-align: center; gap: 20px; }
+            .content { padding: 25px; }
+            .content h3 { font-size: 1.6em; }
+            .content h4 { font-size: 1.4em; }
+            .gallery img { height: 180px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="stars"></canvas>
+    <div class="navbar">
+        <ul>
+            <li><a href="#home">Inicio</a></li>
+            <li><a href="#history">Historia</a></li>
+            <li><a href="#types">Tipos</a></li>
+            <li><a href="#gallery">Galería</a></li>
+            <li><a href="#contact">Contacto</a></li>
+            <li><a href="Ejercicio.html">Regresar</a></li>
+            <li><a href="ejemplo.html">Siguiente</a></li>
+        </ul>
+    </div>
+    <div class="container">
+        <div class="header" id="home">
+            <canvas id="header-stars"></canvas>
+            <h1>Explorando las Nebulosas</h1>
+        </div>
+        <div class="subheader">
+            <h2>Maravillas del Cosmos: Historia, Tipos y Ejemplos</h2>
+        </div>
+        <div class="content" id="about">
+            <p>Datos personales:</p>
+                        <p>Bryan:Me gusta el basquet </p>
+                        <p>MMontse: Me gusta las enchiladas verdes</p>
+                        <p>Renata: Soy negra y me gusta el basqute</p>
+                        <p>Fer: Tengo dawn</p>
+                        <p>Kim: Tengo lentes caros</p>
+                        <p>Camila: Me gustan los gueros </p>
+                        <p>Ariatne: Soy Española</p>
+
+
+
+
+
+
+            <section id="history">
+                <h3>Historia de las Nebulosas</h3>
+                <p>Las nebulosas han fascinado a la humanidad desde la antigüedad. El término "nebulosa" proviene del latín y significa "nube". Astrónomos como Ptolomeo en el siglo II d.C. observaron objetos difusos en el cielo, pero se confundían con estrellas. En el siglo XVIII, Charles Messier compiló un catálogo de 110 objetos nebulosos (incluyendo nebulosas y galaxias) para ayudar a los cazadores de cometas a evitar confusiones.</p>
+                <p>William Herschel y su hermana Caroline expandieron este catálogo en el siglo XIX, clasificando nebulosas por forma. La espectroscopia, desarrollada por científicos como William Huggins en 1864, reveló que las nebulosas eran nubes de gas, no estrellas lejanas. En el siglo XX, Edwin Hubble demostró que algunas "nebulosas" eran galaxias enteras. Hoy, telescopios como el Hubble y el James Webb proporcionan imágenes detalladas, revelando su composición de hidrógeno, helio y elementos pesados.</p>
+                <img src="https://images.unsplash.com/photo-1447433589675-4aaa569f3e05?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Representación histórica de una nebulosa">
+                <p>Para más detalles históricos, visita <a href="https://www.nasa.gov" target="_blank">NASA</a> o explora el catálogo Messier en <a href="https://www.messier-objects.com" target="_blank">Messier Objects</a>.</p>
+            </section>
+
+            <section id="types">
+                <h3>Tipos de Nebulosas</h3>
+                <p>Las nebulosas se clasifican según su apariencia y procesos físicos. A continuación, se detallan los principales tipos, con explicaciones, ejemplos e imágenes.</p>
+
+                <h4>Nebulosas de Emisión</h4>
+                <p>Estas nebulosas brillan debido al gas ionizado por la radiación ultravioleta de estrellas calientes cercanas. Son regiones activas de formación estelar, compuestas principalmente de hidrógeno ionizado (H II).</p>
+                <p>Ejemplo: La Nebulosa de Orión (M42), visible a simple vista en la constelación de Orión, es una de las más estudiadas y se encuentra a unos 1.344 años luz de la Tierra.</p>
+                <img src="https://science.nasa.gov/wp-content/uploads/2023/07/orion-nebula.jpg?w=800" alt="Nebulosa de Orión">
+
+                <h4>Nebulosas de Reflexión</h4>
+                <p>Reflejan la luz de estrellas cercanas sin emitir luz propia, similar a cómo la Luna refleja la luz del Sol. Aparecen azules porque el polvo dispersa más la luz azul.</p>
+                <p>Ejemplo: La Nebulosa de las Pléyades (M45), alrededor del cúmulo estelar de las Pléyades, es un clásico ejemplo de reflexión causada por polvo interestelar.</p>
+                <img src="https://images.unsplash.com/photo-1447433693259-c8549e352d87?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Nebulosa de las Pléyades">
+
+                <h4>Nebulosas Oscuras</h4>
+                <p>Estas nubes densas de polvo y gas bloquean la luz de fondo, apareciendo como siluetas oscuras contra regiones brillantes. Son sitios potenciales para la formación de estrellas.</p>
+                <p>Ejemplo: La Nebulosa Cabeza de Caballo en Orión, descubierta en 1888, es un globulo de Bok que bloquea la luz de la nebulosa de emisión IC 434.</p>
+                <img src="https://images.unsplash.com/photo-1462331940025-496dfbfc7564?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Nebulosa Cabeza de Caballo">
+
+                <h4>Nebulosas Planetarias</h4>
+                <p>Formadas cuando estrellas como el Sol expulsan sus capas externas al final de su vida, dejando un núcleo caliente (enana blanca) que ioniza el gas. No están relacionadas con planetas; el nombre viene de su apariencia redonda en telescopios antiguos.</p>
+                <p>Ejemplo: La Nebulosa del Anillo (M57) en Lira, descubierta por Antoine Darquier en 1779, es un caparazón en expansión a 2.300 años luz.</p>
+                <img src="https://images.unsplash.com/photo-1516339901601-2e1b62dc0c45?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Nebulosa del Anillo">
+
+                <h4>Remanentes de Supernova</h4>
+                <p>Restos de explosiones estelares masivas, que dispersan elementos pesados al espacio. Emite radiación en múltiples longitudes de onda debido al choque con el medio interestelar.</p>
+                <p>Ejemplo: La Nebulosa del Cangrejo (M1), remanente de una supernova observada en 1054 d.C. por astrónomos chinos, contiene un púlsar en su centro.</p>
+                <img src="https://images.unsplash.com/photo-1447433819943-74a1c9c8a3a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Nebulosa del Cangrejo">
+            </section>
+        </div>
+        <div class="gallery" id="gallery">
+            <img src="https://images.unsplash.com/photo-1447433589675-4aaa569f3e05?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Nebulosa 1">
+            <img src="https://images.unsplash.com/photo-1447433693259-c8549e352d87?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Nebulosa 2">
+            <img src="https://images.unsplash.com/photo-1462331940025-496dfbfc7564?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Nebulosa 3">
+            <img src="https://images.unsplash.com/photo-1516339901601-2e1b62dc0c45?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Nebulosa 4">
+            <img src="https://images.unsplash.com/photo-1447433819943-74a1c9c8a3a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Nebulosa 5">
+            <img src="https://science.nasa.gov/wp-content/uploads/2023/07/orion-nebula.jpg?w=300" alt="Nebulosa 6">
+        </div>
+        <div class="contact-form" id="contact">
+            <h3>Contáctame</h3>
+            <form action="#" name="Pagina-Web" method="post">
+                <input type="text" name="name" placeholder="Tu nombre" >
+                <input type="email" name="email" placeholder="Tu correo electrónico">
+                <textarea name="message" rows="5" placeholder="Tu mensaje"></textarea>
+                <input type="submit" name="registro">
+                <input type="reset">
+            </form>
+        </div>
+        <div class="footer">
+            <p>&copy; 2025 Mi Sitio Web sobre Nebulosas. Todos los derechos reservados.</p>
+            <p><a href="https://www.linkedin.com" target="_blank">LinkedIn</a> | <a href="https://www.twitter.com" target="_blank">Twitter</a></p>
+        </div>
+    </div>
+    <script>
+        // Animación de fondo con estrellas
+        const canvas = document.getElementById('stars');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const stars = [];
+        const numStars = 150; // Más estrellas para fondo más dinámico
+
+        for (let i = 0; i < numStars; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 2 + 0.5,
+                speed: Math.random() * 0.8 + 0.3,
+                opacity: Math.random() * 0.5 + 0.5
+            });
+        }
+
+        function animateStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                ctx.fill();
+                star.y += star.speed;
+                if (star.y > canvas.height) star.y = 0;
+            });
+            requestAnimationFrame(animateStars);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        animateStars();
+
+        // Animación de estrellas en el encabezado
+        const headerCanvas = document.getElementById('header-stars');
+        const headerCtx = headerCanvas.getContext('2d');
+        headerCanvas.width = document.querySelector('.header').offsetWidth;
+        headerCanvas.height = document.querySelector('.header').offsetHeight;
+        const headerStars = [];
+        const numHeaderStars = 50;
+
+        for (let i = 0; i < numHeaderStars; i++) {
+            headerStars.push({
+                x: Math.random() * headerCanvas.width,
+                y: Math.random() * headerCanvas.height,
+                radius: Math.random() * 1.5 + 0.5,
+                speed: Math.random() * 1 + 0.5,
+                opacity: Math.random() * 0.5 + 0.5
+            });
+        }
+
+        function animateHeaderStars() {
+            headerCtx.clearRect(0, 0, headerCanvas.width, headerCanvas.height);
+            headerStars.forEach(star => {
+                headerCtx.beginPath();
+                headerCtx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                headerCtx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                headerCtx.fill();
+                star.x -= star.speed; // Mover de derecha a izquierda
+                if (star.x < 0) star.x = headerCanvas.width;
+            });
+            requestAnimationFrame(animateHeaderStars);
+        }
+
+        window.addEventListener('resize', () => {
+            headerCanvas.width = document.querySelector('.header').offsetWidth;
+            headerCanvas.height = document.querySelector('.header').offsetHeight;
+        });
+
+        animateHeaderStars();
+    </script>
+    
+</body>
+<?php
+if(isset($_POST['registro'])){
+    $nombre = $_POST['name'];
+    $email = $_POST['email'];
+    $message = $_POST['message'];
+
+    $insertarDatos = "INSERT INTO cuestion VALUES ('$nombre','$email','$message','')";
+    $ejecutarInsertar = mysqli_query ($enlace, $insertarDatos);
+
+
+}
+?>
+
+
